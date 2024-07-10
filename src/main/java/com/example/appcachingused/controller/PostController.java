@@ -3,10 +3,7 @@ package com.example.appcachingused.controller;
 import com.example.appcachingused.dto.PostDTO;
 import com.example.appcachingused.service.PostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/post")
@@ -18,6 +15,17 @@ public class PostController {
     @GetMapping("{id}")
     public PostDTO getOnePost(@PathVariable Integer id){
        return postService.getOne(id);
+    }
+
+    @DeleteMapping("{id}")
+    public void deletePost(@PathVariable Integer id){
+        postService.remove(id);
+    }
+
+    @PutMapping("{id}")
+    public void update(@PathVariable Integer id,PostDTO newPostDTO){
+        postService.update(id,newPostDTO);
+
     }
 
 
