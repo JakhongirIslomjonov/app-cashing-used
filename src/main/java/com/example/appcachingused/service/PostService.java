@@ -6,56 +6,52 @@ import com.example.appcachingused.mappers.PostMapper;
 import com.example.appcachingused.repo.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
+import lombok.val;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ConcurrentHashMap;
-
-
+@RequiredArgsConstructor
 @Service
 public class PostService {
 
 
     private final PostRepository postRepository;
     private final PostMapper postMapper;
-    private CacheManager cacheManager;
-    private final Cache cache;
 
-    public PostService(PostRepository postRepository, PostMapper postMapper, CacheManager cacheManager) {
-        this.postRepository = postRepository;
-        this.postMapper = postMapper;
-        this.cacheManager=cacheManager;
-        this.cache= cacheManager.getCache("post");
-    }
-//    private ConcurrentHashMap<Integer, PostDTO> cache = new ConcurrentHashMap<>();
 
+    //    private ConcurrentHashMap<Integer, PostDTO> cache = new ConcurrentHashMap<>();
+    @Cacheable(value = "post", key = "#id")
     @SneakyThrows
     public PostDTO getOne(Integer id) {
-        PostDTO cachedPost = cache.get(id,PostDTO.class);
-        if (cachedPost != null) {
-            return cachedPost;
-        }
+
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("error this id"));
         Thread.sleep(3000);
-        cache.put(id, postMapper.toDto(post));
         return postMapper.toDto(post);
     }
 
+    @CacheEvict(value = "post", key = "#id")
     public void remove(Integer id) {
         postRepository.deleteById(id);
-        cache.evict(id);
     }
 
-    public void update(Integer id, PostDTO newPostDTO) {
-
-        PostDTO postDTO = getOne(id);
-        Post post = postMapper.toEntity(postDTO);
+    @CachePut(value = "post", key = "#id")
+    public PostDTO update(Integer id, PostDTO newPostDTO) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("error this id"));
         post.setTitle(newPostDTO.getTitle());
         post.setBody(newPostDTO.getBody());
         postRepository.save(post);
-        cache.put(id, postMapper.toDto(post));
+        return postMapper.toDto(post);
+    }
+
+
+    @Scheduled(initialDelay = 10000,fixedDelay = 2000)
+    @CacheEvict(value = "post", allEntries = true)
+    public void clearCaching() {
+
     }
 
 
