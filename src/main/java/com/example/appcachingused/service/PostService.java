@@ -48,7 +48,7 @@ public class PostService {
     }
 
 
-    @Scheduled(initialDelay = 10000,fixedDelay = 2000)
+    @Scheduled(initialDelay = 10000,fixedDelay = 200000)
     @CacheEvict(value = "post", allEntries = true)
     public void clearCaching() {
 
